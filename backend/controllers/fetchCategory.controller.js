@@ -1,9 +1,6 @@
 import pool from '../db/db.js';
 
-/**
- * Fetch all product categories
- * GET /category
- */
+
 export const fetchCategory = async (req, res) => {
     try {
         const query = `

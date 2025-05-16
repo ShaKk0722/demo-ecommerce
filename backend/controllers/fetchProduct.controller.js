@@ -15,12 +15,12 @@ export const fetchProductsByCategory = async (req, res) => {
             });
         }
 
-        // Pagination defaults
+
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const offset = (page - 1) * limit;
 
-        // Check if category exists
+
         const categoryQuery = `
             SELECT 
                 category_id, 
@@ -43,7 +43,7 @@ export const fetchProductsByCategory = async (req, res) => {
 
         const category = categoryResult.rows[0];
 
-        // Fetch paginated products by category with price
+
         const productsQuery = `
             SELECT 
                 p.product_id, 
@@ -63,7 +63,7 @@ export const fetchProductsByCategory = async (req, res) => {
         `;
         const productsResult = await pool.query(productsQuery, [categoryId, limit, offset]);
 
-        // Count total products in the category
+
         const countQuery = `
             SELECT COUNT(DISTINCT p.product_id) AS total
             FROM product p

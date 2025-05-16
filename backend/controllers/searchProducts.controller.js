@@ -1,12 +1,9 @@
 import pool from '../db/db.js';
 
-/**
- * Search products with various filters and search terms
- * GET /products/search
- */
+
 export const searchProducts = async (req, res) => {
     try {
-        // Extract query parameters with defaults
+
         const {
             q,              // Search term
             category,       // Category ID
@@ -24,12 +21,12 @@ export const searchProducts = async (req, res) => {
         const limitInt = parseInt(limit) || 20;
         const offset = (pageInt - 1) * limitInt;
 
-        // Build query conditions
+
         let conditions = [];
         let params = [];
         let paramCount = 1;
 
-        // Query parameter to add a condition
+
         const addCondition = (column, value, operator = '=') => {
             if (value !== undefined && value !== null && value !== '') {
                 if (operator === 'LIKE') {
@@ -49,7 +46,7 @@ export const searchProducts = async (req, res) => {
             }
         };
 
-        // Add search conditions based on query parameters
+
         if (q) {
             conditions.push(`(
                 p.product_name ILIKE $${paramCount} OR
@@ -60,27 +57,25 @@ export const searchProducts = async (req, res) => {
             paramCount++;
         }
 
-        // Filter by category
         if (category) {
             addCondition('p.categoryNo', category);
         }
 
-        // Filter by brand
+
         if (brand) {
             addCondition('p.brand', brand, 'LIKE');
         }
 
-        // Filter by color
+
         if (color) {
             addCondition('p.color', color, 'LIKE');
         }
 
-        // Filter by size
+
         if (size) {
             addCondition('p.size', size);
         }
 
-        // Filter by price range
         if (min_price) {
             addCondition('s.price', min_price, '>=');
         }
@@ -89,12 +84,11 @@ export const searchProducts = async (req, res) => {
             addCondition('s.price', max_price, '<=');
         }
 
-        // Combine all conditions
         const whereClause = conditions.length > 0 
             ? 'WHERE ' + conditions.join(' AND ') 
             : '';
 
-        // Query to get products with filters and pagination
+
         const productsQuery = `
             SELECT 
                 p.product_id, 
@@ -130,21 +124,20 @@ export const searchProducts = async (req, res) => {
             LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
         `;
 
-        // Default sort option
+
         const sort = req.query.sort || 'product_id';
         let sortOption;
         
-        // Map sort parameter to actual sort options
+
         if (sort === 'price_asc') sortOption = 'price_asc';
         else if (sort === 'price_desc') sortOption = 'price_desc';
         else if (sort === 'name_asc') sortOption = 'name_asc';
         else if (sort === 'name_desc') sortOption = 'name_desc';
         else sortOption = 'product_id';
 
-        // Add sort, limit and offset parameters
         params.push(sortOption, limitInt, offset);
 
-        // Execute the query for products
+
         const productsResult = await pool.query(productsQuery, params);
         const products = productsResult.rows.map(row => {
             return {
@@ -163,8 +156,8 @@ export const searchProducts = async (req, res) => {
             };
         });
 
-        // Count total number of matching products
-        let countParams = [...params.slice(0, params.length - 3)]; // Exclude sort, limit, offset params
+
+        let countParams = [...params.slice(0, params.length - 3)]; 
         const countQuery = `
             SELECT COUNT(DISTINCT p.product_id) AS total
             FROM product p
@@ -177,7 +170,7 @@ export const searchProducts = async (req, res) => {
         const total = parseInt(countResult.rows[0].total);
         const totalPages = Math.ceil(total / limitInt);
 
-        // Get available brands and colors for filtering
+
         const filtersQuery = `
             SELECT
                 p.brand,
@@ -193,7 +186,7 @@ export const searchProducts = async (req, res) => {
         
         const filtersResult = await pool.query(filtersQuery, countParams);
         
-        // Process filter results
+
         const brands = [];
         const colors = [];
         
@@ -213,7 +206,7 @@ export const searchProducts = async (req, res) => {
             }
         });
 
-        // Return the response with products, pagination info, and filters
+
         return res.status(200).json({
             success: true,
             data: {
